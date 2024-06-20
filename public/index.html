@@ -14,7 +14,7 @@
             min-height: 100vh;
             margin: 0;
             background-color: #89B647;
-            /* background-image: url('./bg.png'); */
+            background-image: url('./bg.png');
             background-size: cover;
         }
 
@@ -26,7 +26,9 @@
         }
 
         #table-container {
-            display: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         table {
@@ -67,8 +69,6 @@
             padding: 10px;
             box-shadow: -10px 10px #228B22;
             transform: scale(1);
-            position: absolute;
-            left: 32%;
         }
 
         .target {
@@ -145,7 +145,7 @@
 
         @media (max-width: 1150px) {
             .tableContainer {
-                transform: scale(1.1);
+                transform: scale(1);
             }
         }
 

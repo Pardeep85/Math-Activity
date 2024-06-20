@@ -66,7 +66,7 @@ function findCellValues(roomData, cellIDs) {
 function updateValues(roomData, ids) {
     // Function to generate a random value between 1 and 20
     function getRandomValue() {
-        return 0;//Math.floor(Math.random() * 20) + 1;
+        return Math.floor(Math.random() * 20) + 1;
     }
 
     // Iterate through each room array in roomData
@@ -144,7 +144,7 @@ io.on('connection', (socket) => {
             let cellIds = generateUniqueRandomNumbers()
             console.log("Answer cells", cellIds);
             const result = findCellValues(roomData, cellIds);
-            let operation = Math.floor(Math.random() * 4) + 1;
+            let operation = 1;//Math.floor(Math.random() * 4) + 1;
 
             if (operation == 4) {
                 roomDatas[roomNo] = { roomData: roomData, target: divisionOfNumbers(result), operation: "Division" };
@@ -180,7 +180,7 @@ io.on('connection', (socket) => {
         let cellIds = generateUniqueRandomNumbers()
         console.log("Answer cells", cellIds);
         const result = findCellValues(updatedRoomData, cellIds);
-        let operation = Math.floor(Math.random() * 4) + 1;
+        let operation = 1;//Math.floor(Math.random() * 4) + 1;
 
         if (operation == 4) {
             roomDatas[roomNo] = { roomData: updatedRoomData, target: divisionOfNumbers(result), operation: "Division" };
