@@ -134,7 +134,7 @@ io.on('connection', (socket) => {
         }
         let roomName = `Room-${roomNo}`;
         roomAvaiableSeats[roomNo] = user++;
-        userData[socket.id] = { roomNo: roomNo, roomName: roomName, playerId: user }; // Store user-specific data
+        userData[socket.id] = { roomNo: roomNo, roomName: roomName, playerId: user, point: 0 }; // Store user-specific data
         // console.log(userData)
 
         // Initialize array for the room if it doesn't exist
@@ -142,7 +142,7 @@ io.on('connection', (socket) => {
             let roomData = generateNumberArray(20, 20);
             // console.log(roomData)
             let cellIds = generateUniqueRandomNumbers()
-            console.log("Answer cells", cellIds);
+            console.log("Answer cellsdddddddd", cellIds);
             const result = findCellValues(roomData, cellIds);
             let operation = 1;//Math.floor(Math.random() * 4) + 1;
 
@@ -164,13 +164,13 @@ io.on('connection', (socket) => {
         // console.log(`User ${socket.id} joined room: ${roomName}`);
 
         // Notify the user has joined the room with their specific roomNo
-        io.to(socket.id).emit('enteredRoom', { roomNo: userData[socket.id].roomNo, roomName: roomName, playerId: user });
+        io.to(socket.id).emit('enteredRoom', { roomNo: userData[socket.id].roomNo, roomName: roomName, playerId: user, point: 0 });
         io.emit("tableInfo", { roomData: roomDatas[userData[socket.id].roomNo] })
     });
 
     socket.on('message', (data) => {
         // console.log("meesage reciecved", Date)
-        io.emit("message_result", { cell_id: data.cellId, user_id: userData[socket.id].playerId, roomNo: userData[socket.id].roomNo })
+        io.emit("message_result", { cell_id: data.cellId, user_id: userData[socket.id].playerId, roomNo: userData[socket.id].roomNo, point: userData[socket.id].point })
     });
 
     socket.on('get_winner', (data) => {
@@ -178,7 +178,8 @@ io.on('connection', (socket) => {
         let updatedRoomData = updateValues(roomDatas[userData[socket.id].roomNo].roomData, data.selected_cell_Id)
         // console.log(updatedRoomData)
         let cellIds = generateUniqueRandomNumbers()
-        console.log("Answer cells", cellIds);
+        userData[socket.id].point = Number(userData[socket.id].point) + Number(data.currentPoint)
+        console.log("Answer celkjjls", cellIds);
         const result = findCellValues(updatedRoomData, cellIds);
         let operation = 1;//Math.floor(Math.random() * 4) + 1;
 

@@ -18,6 +18,35 @@
             background-size: cover;
         }
 
+        .cursor {
+            width: 20px;
+            height: 20px;
+            border: 1px solid black;
+            border-radius: 50%;
+            position: absolute;
+            pointer-events: none;
+            background: red;
+            z-index: 100;
+        }
+
+        .cursor::after {
+            content: "";
+            width: 20px;
+            height: 20px;
+            position: absolute;
+            border-radius: 50%;
+            opacity: .5;
+            top: -8px;
+            left: -8px;
+        }
+
+
+
+        .expand {
+            animation: cursorAnim3 .5s forwards;
+            border: 1px solid red;
+        }
+
         #username-container {
             margin-bottom: 20px;
             display: flex;
@@ -84,6 +113,16 @@
         .operation {
             position: absolute;
             top: 70px;
+            left: 20px;
+            font-size: 2rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        .point {
+            position: absolute;
+            top: 130px;
             left: 20px;
             font-size: 2rem;
             font-weight: 900;
@@ -217,6 +256,7 @@
 </head>
 
 <body>
+    <div class="cursor"></div>
     <div id="username-container">
         <div class="userName">
             <input type="text" id="username" placeholder="Enter your username">
@@ -229,6 +269,7 @@
     <div id="table-container">
         <div class="target">Target: <span id="targetValue">0</span></div>
         <div class="operation">Operation: <span id="operationValue">0</span></div>
+        <div class="point">Points: <span id="pointValue">0</span></div>
         <!-- <div class="timer"></div> -->
     </div>
 
@@ -237,21 +278,34 @@
         var socket = io();
         var selectedCellId = {};
         var answer = {};
+
+        const cursor = document.querySelector('.cursor');
+
+        document.addEventListener('mousemove', e => {
+            cursor.setAttribute("style", "top: " + (e.pageY - 10) + "px; left: " + (e.pageX - 10) + "px;")
+            var UserID = sessionStorage.getItem('UserID');
+            setcursorColor(UserID)
+        })
+
         function createOverlayDiv(cell, UserID) {
             var overlayDiv = document.createElement('div');
             // var UserID = sessionStorage.getItem('UserID');
             overlayDiv.setAttribute('id', cell.id + "-" + UserID)
             overlayDiv.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;';
             if (UserID == 1) {
+                cursor.style.backgroundColor = "rgba(115, 115, 0, 0.5)"
                 overlayDiv.style.backgroundColor = "rgba(115, 115, 0, 0.5)";
             }
             else if (UserID == 2) {
+                cursor.style.backgroundColor = "rgba(255, 0, 0, 0.5)";
                 overlayDiv.style.backgroundColor = "rgba(255, 0, 0, 0.5)";
             }
             else if (UserID == 3) {
+                cursor.style.backgroundColor = "rgba(0, 0, 255, 0.5)";
                 overlayDiv.style.backgroundColor = "rgba(0, 0, 255, 0.5)";
             }
             else {
+                cursor.style.backgroundColor = "rgba(255, 255, 0, 0.5)";
                 overlayDiv.style.backgroundColor = "rgba(255, 255, 0, 0.5)";
             }
             cell.appendChild(overlayDiv);
@@ -327,6 +381,7 @@
         }
 
         function userSelectionHandler(cellelement, userId) {
+            console.log("------------------------------userSelectionHandler------------------------------------")
             var existingOverlayDiv = document.getElementById(cellelement.id + "-" + userId);
             var targetedCell = document.getElementById("value-" + cellelement.id);
             var Target = Number(sessionStorage.getItem('Target'));
@@ -343,19 +398,38 @@
                     selectedCellId[userId] = []; // Initialize as an empty array if it doesn't exist
                 }
                 selectedCellId[userId].push(Number(cellelement.id))
+                let answerArr = selectedCellId[userId];
+                console.log("user id ", userId, selectedCellId[userId], answerArr)
                 answer[userId] = getValueofIDs(selectedCellId[userId]);
-                if (Target === answer[userId]) {
+                if (Target === answer[userId] && answerArr.length > 2) {
                     console.log("bingo")
-                    socket.emit("get_winner", { selected_cell_Id: selectedCellId[userId] })
+                    socket.emit("get_winner", { selected_cell_Id: selectedCellId[userId], currentPoint: answerArr.length })
                     answer = {};
                     selectedCellId = {}
                 }
+                console.log("ANSWER ====", answer)
             }
             console.log(targetedCell.textContent, " ---", answer, "---", selectedCellId);
         }
 
+        function setcursorColor(UserID) {
+            if (UserID == 1) {
+                cursor.style.backgroundColor = "rgba(115, 115, 0, 0.5)"
+            }
+            else if (UserID == 2) {
+                cursor.style.backgroundColor = "rgba(255, 0, 0, 0.5)";
+            }
+            else if (UserID == 3) {
+                cursor.style.backgroundColor = "rgba(0, 0, 255, 0.5)";
+            }
+            else {
+                cursor.style.backgroundColor = "rgba(255, 255, 0, 0.5)";
+            }
+        }
         function generateTable(data) {
+            console.log("=================================generateTable===========================")
             const removTableContainer = document.querySelector('.tableContainer');
+
 
             // Check if the element exists before trying to remove it
             if (removTableContainer) {
@@ -404,6 +478,7 @@
             sessionStorage.setItem('UserID', data.playerId);
             sessionStorage.setItem('Room', data.roomNo);
             console.log(data.roomData)
+            setcursorColor(data.playerId)
             // document.getElementById('table-container').appendChild(generateTable(data.roomData.roomData))
         });
 
@@ -424,6 +499,9 @@
                 // console.log("Message result:", data.cell_id, data.user_id);
                 if (UserID != data.user_id) {
                     userSelectionHandler(targetedBox, data.user_id)
+                }
+                else {
+                    document.getElementById("pointValue").textContent = data.point;
                 }
             }
         });
