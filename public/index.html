@@ -60,6 +60,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            visibility: hidden;
         }
 
         table {
@@ -547,6 +548,7 @@
             socket.emit("joinRoom");
             document.getElementById("username-container").style.display = "none"; // Hide username input
             document.getElementById("table-container").style.display = "contents"; // Show the table
+            document.getElementById("table-container").style.visibility = "visible"; // Show the table
         });
 
         socket.on("enteredRoom", function (data) {
