@@ -428,13 +428,76 @@
             return Math.trunc(Math.abs(result));
         }
 
+        function createSequentialArray(rows, cols) {
+            const array = [];
+            let currentValue = 1;
+
+            for (let i = 0; i < rows; i++) {
+                const row = [];
+                for (let j = 0; j < cols; j++) {
+                    row.push(currentValue);
+                    currentValue++;
+                }
+                array.push(row);
+            }
+
+            return array;
+        }
+
+        function areElementsConnected(array, elements) {
+            const directions = [
+                [0, 1],  // Right
+                [1, 0],  // Down
+                [1, 1],  // Diagonal Right Down
+                [1, -1], // Diagonal Left Down
+                [0, -1], // Left
+                [-1, 0], // Up
+                [-1, -1],// Diagonal Left Up
+                [-1, 1]  // Diagonal Right Up
+            ];
+            const positions = elements.map(el => findPosition(array, el));
+
+            if (positions.includes(null)) {
+                return false;  // If any element is not found in the array, return false
+            }
+
+            for (let i = 0; i < positions.length - 1; i++) {
+                let connected = false;
+
+                for (let [rowDir, colDir] of directions) {
+                    const nextPosition = [positions[i][0] + rowDir, positions[i][1] + colDir];
+
+                    if (nextPosition[0] === positions[i + 1][0] && nextPosition[1] === positions[i + 1][1]) {
+                        connected = true;
+                        break;
+                    }
+                }
+
+                if (!connected) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function findPosition(array, element) {
+            for (let i = 0; i < array.length; i++) {
+                for (let j = 0; j < array[i].length; j++) {
+                    if (array[i][j] === element) {
+                        return [i, j];
+                    }
+                }
+            }
+            return null;  // If the element is not found
+        }
+
         function getValueofIDs(cells) {
             var OperationType = sessionStorage.getItem('OperationType');
             let values = [];
             let answer = 0;
             console.log(cells)
             cells.map((cell) => {
-                // console.log('cell --', cell)
                 var targetedCell = document.getElementById("value-" + cell);
                 values.push(Number(targetedCell.textContent));
             })
@@ -462,29 +525,35 @@
             var targetedCell = document.getElementById("value-" + cellelement.id);
             var Target = Number(sessionStorage.getItem('Target'));
             var OperationType = Number(sessionStorage.getItem('OperationType'));
+
             if (existingOverlayDiv) {
                 cellelement.removeChild(existingOverlayDiv);
                 selectedCellId[userId] = selectedCellId[userId].filter(number => number !== Number(cellelement.id))
                 answer[userId] = getValueofIDs(selectedCellId[userId])
 
             } else {
+                // alert()
                 createOverlayDiv(cellelement, userId);
-                // answer += Number(targetedCell.textContent)
                 if (!selectedCellId[userId]) {
                     selectedCellId[userId] = []; // Initialize as an empty array if it doesn't exist
                 }
                 selectedCellId[userId].push(Number(cellelement.id))
                 let answerArr = selectedCellId[userId];
-                console.log("user id ", userId, selectedCellId[userId], answerArr)
+                console.log("user id ========================================================================================= ", answerArr)
                 answer[userId] = getValueofIDs(selectedCellId[userId]);
                 user_ID = userId;
-                // if (Target === answer[userId] && answerArr.length > 2) {
-                //     console.log("bingo")
-                //     socket.emit("get_winner", { selected_cell_Id: selectedCellId[userId], currentPoint: answerArr.length })
-                //     answer = {};
-                //     selectedCellId = {}
-                // }
                 console.log("ANSWER ====", answer)
+            }
+            if (selectedCellId[userId] != undefined && selectedCellId[userId].length > 1) {
+                let elementsToCheck = selectedCellId[userId];
+                let array = createSequentialArray(20, 20);
+                let result = areElementsConnected(array, elementsToCheck);
+                console.log("Are the elements connected?", result);
+                let correctSound = document.getElementById("correct-sound");
+                let wrongSound = document.getElementById("wrong-sound");
+                if (!result) {
+                    wrongSound.play()
+                }
             }
             console.log(targetedCell.textContent, " ---", answer, "---", selectedCellId);
         }
@@ -533,7 +602,7 @@
                     });
                     var valueText = document.createElement('p');
                     valueText.textContent = cell.value;
-                    valueText.id = "value-" + cell.id
+                    valueText.id = "value-" + cell.id;
                     valueText.style.pointerEvents = "none";
                     td.appendChild(valueText);
                     tr.appendChild(td);

@@ -19,6 +19,78 @@ var roomAvaiableSeats = {};
 const roomDatas = {};
 var maxValue = 20;
 
+function createSequentialArray(rows, cols) {
+    const array = [];
+    let currentValue = 1;
+
+    for (let i = 0; i < rows; i++) {
+        const row = [];
+        for (let j = 0; j < cols; j++) {
+            row.push(currentValue);
+            currentValue++;
+        }
+        array.push(row);
+    }
+
+    return array;
+}
+
+
+function getConnectedElements(array) {
+    const directions = [
+        [0, 1],  // Right
+        [1, 0],  // Down
+        [1, 1],  // Diagonal Right Down
+        [1, -1], // Diagonal Left Down
+        [0, -1], // Left
+        [-1, 0], // Up
+        [-1, -1],// Diagonal Left Up
+        [-1, 1]  // Diagonal Right Up
+    ];
+    const rows = array.length;
+    const cols = array[0].length;
+    let mainElement, connectedElements;
+
+    while (!connectedElements) {
+        // Randomly choose a main element
+        const mainRow = Math.floor(Math.random() * rows);
+        const mainCol = Math.floor(Math.random() * cols);
+        mainElement = array[mainRow][mainCol];
+
+        // Shuffle directions to ensure randomness in selection
+        for (let i = directions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [directions[i], directions[j]] = [directions[j], directions[i]];
+        }
+
+        for (let [rowDir, colDir] of directions) {
+            const positions = [[mainRow, mainCol]];
+
+            for (let i = 1; i <= 2; i++) {  // We need 2 more connected elements
+                const newRow = mainRow + i * rowDir;
+                const newCol = mainCol + i * colDir;
+
+                // Check if the new position is within bounds
+                if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
+                    positions.push([newRow, newCol]);
+                } else {
+                    break;
+                }
+            }
+
+            if (positions.length === 3) {
+                connectedElements = positions;
+                break;
+            }
+        }
+    }
+
+    // Extract the values based on the positions
+    const elements = connectedElements.map(([row, col]) => array[row][col]);
+
+    return elements;
+}
+
 function generateUniqueRandomNumbers() {
     let numbers = new Set();
 
@@ -42,7 +114,6 @@ function generateNumberArray(rows, columns) {
         }
         results.push(result)
     }
-
     return results;
 }
 
@@ -59,14 +130,14 @@ function findCellValues(roomData, cellIDs) {
             }
         }
     });
-
+    console.log("findCellValues", values)
     return values;
 }
 
 function updateValues(roomData, ids) {
     // Function to generate a random value between 1 and 20
     function getRandomValue() {
-        return Math.floor(Math.random() * 20) + 1;
+        return Math.floor(Math.random() * 8) + 1;
     }
 
     // Iterate through each room array in roomData
@@ -141,7 +212,9 @@ io.on('connection', (socket) => {
         if (!roomDatas[roomNo]) {
             let roomData = generateNumberArray(20, 20);
             // console.log(roomData)
-            let cellIds = generateUniqueRandomNumbers()
+            const array = createSequentialArray(20, 20);
+            let cellIds = getConnectedElements(array);
+            // let cellIds = generateUniqueRandomNumbers()
             console.log("Answer cellsdddddddd", cellIds);
             const result = findCellValues(roomData, cellIds);
             let operation = 1;//Math.floor(Math.random() * 4) + 1;
@@ -176,12 +249,12 @@ io.on('connection', (socket) => {
     socket.on('get_winner', (data) => {
         // console.log("data.selected_cell_Id", data.selected_cell_Id)
         let updatedRoomData = updateValues(roomDatas[userData[socket.id].roomNo].roomData, data.selected_cell_Id)
-        // console.log(updatedRoomData)
-        let cellIds = generateUniqueRandomNumbers()
+        const array = createSequentialArray(20, 20);
+        let cellIds = getConnectedElements(array);
         userData[socket.id].point = Number(userData[socket.id].point) + Number(data.currentPoint)
         console.log("Answer celkjjls", cellIds);
         const result = findCellValues(updatedRoomData, cellIds);
-        let operation = 1;//Math.floor(Math.random() * 4) + 1;
+        let operation = 1;
 
         if (operation == 4) {
             roomDatas[roomNo] = { roomData: updatedRoomData, target: divisionOfNumbers(result), operation: "Division" };
