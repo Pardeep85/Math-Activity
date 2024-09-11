@@ -501,7 +501,7 @@
                 var targetedCell = document.getElementById("value-" + cell);
                 values.push(Number(targetedCell.textContent));
             })
-            console.log("OperationType", OperationType, values)
+            // console.log("OperationType", OperationType, values)
             if (OperationType == "Addition") {
                 answer = sumOfNumbers(values)
             }
@@ -514,13 +514,13 @@
             else if (OperationType == "Division") {
                 answer = divisionOfNumbers(values)
             }
-            console.log("ANSWER ==> ", answer)
+            // console.log("ANSWER ==> ", answer)
             return answer
             // var targetedCell = document.getElementById("value-" + cellelement.id);
         }
 
         function userSelectionHandler(cellelement, userId) {
-            console.log("------------------------------userSelectionHandler------------------------------------")
+            // console.log("------------------------------userSelectionHandler------------------------------------")
             var existingOverlayDiv = document.getElementById(cellelement.id + "-" + userId);
             var targetedCell = document.getElementById("value-" + cellelement.id);
             var Target = Number(sessionStorage.getItem('Target'));
@@ -533,29 +533,39 @@
 
             } else {
                 // alert()
+                let elementsToCheck = selectedCellId[userId];
+                if (elementsToCheck != undefined && selectedCellId[userId].length > 0) {
+                    let array = createSequentialArray(20, 20);
+                    let result = areElementsConnected(array, [...elementsToCheck, Number(cellelement.id)]);
+
+
+                    if (!result && elementsToCheck.length > 0) {
+                        let wrongSound = document.getElementById("wrong-sound");
+                        wrongSound.play()
+                        return;
+                    }
+                }
+
                 createOverlayDiv(cellelement, userId);
                 if (!selectedCellId[userId]) {
                     selectedCellId[userId] = []; // Initialize as an empty array if it doesn't exist
                 }
                 selectedCellId[userId].push(Number(cellelement.id))
                 let answerArr = selectedCellId[userId];
-                console.log("user id ========================================================================================= ", answerArr)
                 answer[userId] = getValueofIDs(selectedCellId[userId]);
                 user_ID = userId;
-                console.log("ANSWER ====", answer)
             }
-            if (selectedCellId[userId] != undefined && selectedCellId[userId].length > 1) {
-                let elementsToCheck = selectedCellId[userId];
-                let array = createSequentialArray(20, 20);
-                let result = areElementsConnected(array, elementsToCheck);
-                console.log("Are the elements connected?", result);
-                let correctSound = document.getElementById("correct-sound");
-                let wrongSound = document.getElementById("wrong-sound");
-                if (!result) {
-                    wrongSound.play()
-                }
-            }
-            console.log(targetedCell.textContent, " ---", answer, "---", selectedCellId);
+            // if (selectedCellId[userId] != undefined && selectedCellId[userId].length > 1) {
+            //     let elementsToCheck = selectedCellId[userId];
+            //     let array = createSequentialArray(20, 20);
+            //     let result = areElementsConnected(array, elementsToCheck);
+            //     // console.log("Are the elements connected?", result);
+            //     let wrongSound = document.getElementById("wrong-sound");
+            //     if (!result) {
+            //         wrongSound.play()
+            //     }
+            // }
+            //console.log(targetedCell.textContent, " ---", answer, "---", selectedCellId);
         }
 
         function setcursorColor(UserID) {
@@ -573,7 +583,7 @@
             }
         }
         function generateTable(data) {
-            console.log("=================================generateTable===========================")
+            //console.log("=================================generateTable===========================")
             const removTableContainer = document.querySelector('.tableContainer');
 
 
@@ -596,7 +606,7 @@
                         var UserID = sessionStorage.getItem('UserID');
                         var roomNo = sessionStorage.getItem('Room');
                         var cellelement = event.target;
-                        console.log("Cell ID:", cellelement.id + "-" + UserID);
+                        //console.log("Cell ID:", cellelement.id + "-" + UserID);
                         userSelectionHandler(cellelement, UserID)
                         socket.emit("message", { cellId: cell.id, userId: UserID, roomNo: roomNo });
                     });
@@ -613,7 +623,7 @@
         }
 
         document.getElementById("send").addEventListener("click", function () {
-            console.log("Attempting to join room...");
+            //console.log("Attempting to join room...");
             socket.emit("joinRoom");
             document.getElementById("username-container").style.display = "none"; // Hide username input
             document.getElementById("table-container").style.display = "contents"; // Show the table
@@ -621,10 +631,10 @@
         });
 
         socket.on("enteredRoom", function (data) {
-            console.log("Entered room:", data);
+            //console.log("Entered room:", data);
             sessionStorage.setItem('UserID', data.playerId);
             sessionStorage.setItem('Room', data.roomNo);
-            console.log(data.roomData)
+            //console.log(data.roomData)
             setcursorColor(data.playerId)
             // document.getElementById('table-container').appendChild(generateTable(data.roomData.roomData))
         });
