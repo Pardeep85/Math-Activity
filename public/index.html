@@ -63,6 +63,13 @@
             visibility: hidden;
         }
 
+        #gameAction-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            visibility: hidden;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -133,7 +140,7 @@
             text-shadow: 1px 1px 2px black;
         }
 
-        /* .timer {
+        .timer {
             position: absolute;
             top: 20px;
             right: 20px;
@@ -142,7 +149,7 @@
             background-repeat: no-repeat;
             width: 200px;
             height: 145px;
-        } */
+        }
 
         .userName {
             background-image: url('./input.png');
@@ -229,10 +236,10 @@
                 transform: scale(0.4);
             }
 
-            /* .timer {
+            .timer {
                 width: 124px;
                 height: 57px;
-            } */
+            }
 
             .operation {
                 top: 53px;
@@ -303,6 +310,108 @@
             box-shadow: #3c4fe0 0 3px 7px inset;
             transform: translateY(2px);
         }
+
+        .button-action {
+            align-items: center;
+            appearance: none;
+            background-image: radial-gradient(100% 100% at 100% 0, #5adaff 0, #5468ff 100%);
+            border: 0;
+            border-radius: 6px;
+            box-shadow: rgba(45, 35, 66, .4) 0 2px 4px, rgba(45, 35, 66, .3) 0 7px 13px -3px, rgba(58, 65, 111, .5) 0 -3px 0 inset;
+            box-sizing: border-box;
+            color: #fff;
+            cursor: pointer;
+            display: inline-flex;
+            height: 60px;
+            width: 200px;
+            justify-content: center;
+            line-height: 1;
+            list-style: none;
+            overflow: hidden;
+            padding-left: 16px;
+            padding-right: 16px;
+            position: relative;
+            text-align: left;
+            text-decoration: none;
+            transition: box-shadow .15s, transform .15s;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            white-space: nowrap;
+            will-change: box-shadow, transform;
+            font-size: 25px;
+            position: absolute;
+            bottom: 50px;
+        }
+
+        .button-action:focus {
+            box-shadow: #3c4fe0 0 0 0 1.5px inset, rgba(45, 35, 66, .4) 0 2px 4px, rgba(45, 35, 66, .3) 0 7px 13px -3px, #3c4fe0 0 -3px 0 inset;
+        }
+
+        .button-action:hover {
+            box-shadow: rgba(45, 35, 66, .4) 0 4px 8px, rgba(45, 35, 66, .3) 0 7px 13px -3px, #3c4fe0 0 -3px 0 inset;
+            transform: translateY(-2px);
+        }
+
+        .button-action:active {
+            box-shadow: #3c4fe0 0 3px 7px inset;
+            transform: translateY(2px);
+        }
+
+        .gameSetupPopup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 25px;
+            width: 628px;
+            height: 328px;
+            display: none;
+        }
+
+        .timers-options,
+        .operation-mode {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .timers-options label,
+        .operation-mode label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        #timer-txt {
+            margin: 23px 0px 0px 91px;
+            font-size: 32px;
+            color: #fff;
+            font-weight: bold;
+            width: 103px;
+            height: 44px;
+            text-align: center;
+            align-content: center;
+        }
+
+        #resultScreen {
+            display: none !important;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2em;
+        }
     </style>
 </head>
 
@@ -317,24 +426,101 @@
         </div>
         <!-- <button id="send">Send</button> -->
     </div>
+    <div id="gameAction-container">
+        <div class="gameSetupPopup">
+
+            <div class="timers-options">
+                <label for="timers">Select Timer:</label>
+                <select id="timers" name="timers">
+                    <option value="3">3 Minutes</option>
+                    <option value="5">5 Minutes</option>
+                    <option value="10">10 Minutes</option>
+                </select>
+            </div>
+            <div class="operation-mode">
+                <label for="operation">Select Operation Mode:</label>
+                <select id="operation" name="operation" onchange="setOperationType()">
+                    <option value="Addition">Addition</option>
+                    <option value="Subtraction">Subtraction</option>
+                    <option value="Multiplication">Multiplication</option>
+                    <option value="Division">Division</option>
+                </select>
+            </div>
+        </div>
+        <button class="button-action" role="button" type="button" onclick="gameStart()">GO</button>
+
+    </div>
     <div id="table-container">
         <div class="target">Target: <span id="targetValue">0</span></div>
-        <div class="operation">Operation: <span id="operationValue">0</span></div>
+        <div class="operation">Operation: <span id="operationValue"></span></div>
         <div class="point">Points: <span id="pointValue">0</span></div>
-        <!-- <div class="timer"></div> -->
+        <div class="timer">
+            <div id="timer-txt"></div>
+        </div>
         <button class="button-29" role="button" type="button" onclick="checkResult()">Submit</button>
 
+    </div>
+    <div id="resultScreen">
+        <p id="playerName">Player: </p>
+        <p id="playerScore">Score: </p>
     </div>
     <audio id="correct-sound" src="correct.mp3"></audio>
     <audio id="wrong-sound" src="wrong.mp3"></audio>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="./socket.io.js"></script>
     <script>
-        var socket = io();
+        // var socket = io();
+        const socket = io();
         var selectedCellId = {};
         var answer = {};
         var user_ID = 0;
         const cursor = document.querySelector('.cursor');
+        const resultScreen = document.getElementById('resultScreen');
+        const playerName = document.getElementById('playerName');
+        const playerScore = document.getElementById('playerScore');
+        const usernameInput = document.getElementById('username');
+        const operationSelect = document.getElementById('operation');
+        const currentOperationText = document.getElementById('operationValue');
+        var selectedOperation = "Addition";
+        sessionStorage.setItem('OperationType', selectedOperation);
+        console.log("Before:",selectedOperation)
+        // Emit selected operation to backend when changed
+        // operationSelect.addEventListener('change', (event) => {
+        //     const selectedOperation = event.target.value;
+        //     socket.emit('selectOperation', selectedOperation);
+        // });
+
+        operationSelect.addEventListener('change', (event) => {
+            selectedOperation = event.target.value;
+            socket.emit('selectOperation', selectedOperation);
+            sessionStorage.setItem('OperationType', selectedOperation); // Save to sessionStorage here
+            console.log("After selected operation:",selectedOperation)
+        });
+
+
+        // socket.on('updateOperation', (operation) => {
+        //     currentOperationText.textContent = operation;
+        //     operationSelect.value = operation; // Update dropdown to reflect the current operation
+        //     // document.getElementById("targetValue").textContent = target;
+        // });
+
+        // Listen for points update
+        socket.on('updatePoints', (data) => {
+            console.log('Updated points:', data.points); // Debugging: Verify points
+            // Find the user's score element by playerId and update it
+            const playerElement = document.getElementById("pointValue")
+            sessionStorage.setItem('userScore', data.points)
+            if (playerElement) {
+                playerElement.textContent = data.points;
+            }
+        });
+
+        socket.on('updateOperation', (operation) => {
+            currentOperationText.textContent = operation;
+            operationSelect.value = operation;
+            sessionStorage.setItem('OperationType', operation); // Update sessionStorage on backend update as well
+        });
+
 
         document.addEventListener('mousemove', e => {
             cursor.setAttribute("style", "top: " + (e.pageY - 10) + "px; left: " + (e.pageX - 10) + "px;")
@@ -342,8 +528,32 @@
             setcursorColor(UserID)
         })
 
+
+        const USER_IDS = { PLAYER1: 1, PLAYER2: 2, PLAYER3: 3, DEFAULT: 4 };
+
+        document.getElementById("send").addEventListener("click", handleJoinRoom);
+        document.querySelector('.button-action').addEventListener('click', gameStart);
+
+        function handleJoinRoom() {
+            const userName = usernameInput.value || "Guest";
+            sessionStorage.setItem('userName', userName);
+            socket.emit("joinRoom");
+            document.querySelector(".gameSetupPopup").style.display = 'block';
+            document.getElementById("username-container").style.display = "none";
+            document.getElementById("gameAction-container").style.visibility = "visible";
+        }
+
+
+        function setOperationType() {
+            var operationType = document.getElementById('operation').value;
+            console.log(operationType)
+            sessionStorage.setItem('OperationType', operationType);
+        }
+
         function checkResult() {
+
             var Target = Number(sessionStorage.getItem('Target'));
+            var OperationType = sessionStorage.getItem('OperationType');
             if (!Target || !answer[user_ID]) {
                 return;
             }
@@ -354,7 +564,11 @@
             if (Target === answer[user_ID] && answerArr.length > 2) {
                 // Play correct answer sound
                 correctSound.play();
-                socket.emit("get_winner", { selected_cell_Id: selectedCellId[user_ID], currentPoint: answerArr.length });
+
+                // socket.emit("get_winner", { selected_cell_Id: selectedCellId[user_ID], currentPoint: answerArr.length });
+
+                socket.emit('get_winner', { selected_cell_Id: selectedCellId[user_ID], currentPoint: answerArr.length, operation: OperationType });
+                console.log(answerArr.length)
                 answer = {};
                 selectedCellId = {};
             } else {
@@ -362,6 +576,79 @@
                 wrongSound.play();
             }
         }
+
+        function gameStart() {
+            displayGameElements();
+            startTimer();
+        }
+
+        function displayGameElements() {
+            document.getElementById("table-container").style.display = "contents";
+            document.getElementById("table-container").style.visibility = "visible";
+            document.querySelector(".gameSetupPopup").style.display = "block";
+        }
+
+        // function startTimer() {
+        //     const selectedMinutes = parseInt(document.getElementById('timers').value, 10);
+        //     if (isNaN(selectedMinutes) || selectedMinutes <= 0) return;
+
+        //     let timeInSeconds = selectedMinutes * 60;
+        //     console.log(timeInSeconds)
+        //     const countdownInterval = setInterval(() => {
+        //     if (timeInSeconds == 0) {
+        //         clearInterval(countdownInterval);
+        //         const name = sessionStorage.getItem('userName') || "Guest";
+        //         const score = sessionStorage.getItem('userScore') || 100;
+        //         playerName.textContent = `Player: ${name}`;
+        //         playerScore.textContent = `Score: ${score}`;
+        //         resultScreen.style.display = 'flex';
+        //         return;
+        //     }
+
+        //     const minutes = Math.floor(timeInSeconds / 60);
+        //     const seconds = timeInSeconds % 60;
+        //     console.log("minutes",minutes,"seconds",seconds);
+        //     console.log(timeInSeconds);
+        //     if(timeInSeconds==0){
+        //         document.getElementById('timer-txt').textContent = `${minutes}:${seconds}${seconds}`;
+        //     }else{
+        //         document.getElementById('timer-txt').textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        //         timeInSeconds--;
+        //     }
+        //     let a = document.getElementById('timer-txt').textContent;
+        //     console.log(a);
+        //     }, 1000);
+        // }
+
+        function startTimer() {
+            const selectedMinutes = parseInt(document.getElementById('timers').value, 10);
+            if (isNaN(selectedMinutes) || selectedMinutes <= 0) return;
+
+            let timeInSeconds = selectedMinutes * 60;
+            console.log(timeInSeconds);
+
+            const countdownInterval = setInterval(() => {
+                if (timeInSeconds === 0) {
+                    clearInterval(countdownInterval);
+                    document.getElementById('timer-txt').textContent = '0:00'; // Display 0:00 when timer ends
+
+                    const name = sessionStorage.getItem('userName') || "Guest";
+                    const score = sessionStorage.getItem('userScore') || 100;
+                    console.log(score);
+                    playerName.textContent = `Player: ${name}`;
+                    playerScore.textContent = `Score: ${score}`;
+                    // resultScreen.style.display = 'flex';
+                    resultScreen.style.setProperty('display', 'flex', 'important');
+                    return;
+                }
+
+                const minutes = Math.floor(timeInSeconds / 60);
+                const seconds = timeInSeconds % 60;
+                document.getElementById('timer-txt').textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                timeInSeconds--;
+            }, 1000);
+        }
+
 
         function createOverlayDiv(cell, UserID) {
             var overlayDiv = document.createElement('div');
@@ -395,19 +682,36 @@
             return numbers.reduce((product, number) => product * number, 1);
         }
 
+        // function differenceOfNumbers(numbers) {
+        //     if (numbers.length === 0) return 0; // Handle empty array
+        //     if (numbers.length === 1) return numbers[0]; // Handle single element array
+
+        //     numbers.sort((a, b) => b - a); // Sort the array in ascending order
+        //     let difference = numbers[0]; // Start with the first number
+        //     for (let i = 1; i < numbers.length; i++) {
+        //         console.log("BEFORE", i, difference, numbers[i])
+        //         difference = Math.abs(difference - numbers[i]);
+        //         console.log("AFTER", i, difference, numbers[i])
+        //     }
+        //     return difference;
+        // }
+
         function differenceOfNumbers(numbers) {
             if (numbers.length === 0) return 0; // Handle empty array
             if (numbers.length === 1) return numbers[0]; // Handle single element array
 
-            numbers.sort((a, b) => b - a); // Sort the array in ascending order
-            let difference = numbers[0]; // Start with the first number
+            numbers.sort((a, b) => b - a); // Sort descending (largest to smallest)
+            let difference = numbers[0]; // Start with the largest number
+
             for (let i = 1; i < numbers.length; i++) {
-                console.log("BEFORE", i, difference, numbers[i])
-                difference = Math.abs(difference - numbers[i]);
-                console.log("AFTER", i, difference, numbers[i])
+                console.log("BEFORE", i, difference, numbers[i]);
+                difference -= numbers[i]; // Subtract each subsequent number
+                console.log("AFTER", i, difference, numbers[i]);
             }
-            return difference;
+
+            return Math.abs(difference);
         }
+
 
         function divisionOfNumbers(numbers) {
             if (numbers.length === 0) return 0; // Handle empty array
@@ -420,7 +724,7 @@
                     r.sort((a, b) => b - a);
                     result = r[0] / r[1];
                     r = r.slice(2)
-                    r.push(result); cna
+                    r.push(result);
                 }
 
             }
@@ -492,31 +796,61 @@
             return null;  // If the element is not found
         }
 
+        // function getValueofIDs(cells) {
+        //     var OperationType = sessionStorage.getItem('OperationType');
+        //     // console.log(OperationType);
+        //     let values = [];
+        //     let answer = 0;
+        //     console.log(cells)
+        //     cells.map((cell) => {
+        //         var targetedCell = document.getElementById("value-" + cell);
+        //         console.log(targetedCell)
+        //         values.push(Number(targetedCell.textContent));
+        //     })
+        //     console.log("OperationType", OperationType, values)
+        //     if (OperationType == "Addition") {
+        //         answer = sumOfNumbers(values)
+        //     }
+        //     else if (OperationType == "Substraction") {
+        //         answer = differenceOfNumbers(values)
+        //     }
+        //     else if (OperationType == "Multiplication") {
+        //         answer = productOfNumbers(values)
+        //     }
+        //     else if (OperationType == "Division") {
+        //         answer = divisionOfNumbers(values)
+        //     }
+        //     console.log("ANSWER ==> ", answer)
+        //     return answer
+        //     // var targetedCell = document.getElementById("value-" + cellelement.id);
+        // }
+
         function getValueofIDs(cells) {
             var OperationType = sessionStorage.getItem('OperationType');
             let values = [];
             let answer = 0;
-            console.log(cells)
+
             cells.map((cell) => {
                 var targetedCell = document.getElementById("value-" + cell);
-                values.push(Number(targetedCell.textContent));
-            })
-            // console.log("OperationType", OperationType, values)
-            if (OperationType == "Addition") {
-                answer = sumOfNumbers(values)
+                if (targetedCell) {
+                    values.push(Number(targetedCell.textContent)); // Ensure numbers are extracted correctly
+                }
+            });
+
+            console.log("OperationType", OperationType, values);
+
+            if (OperationType === "Addition") {
+                answer = sumOfNumbers(values);
+            } else if (OperationType === "Subtraction") {
+                answer = differenceOfNumbers(values); // Corrected function name
+            } else if (OperationType === "Multiplication") {
+                answer = productOfNumbers(values);
+            } else if (OperationType === "Division") {
+                answer = divisionOfNumbers(values);
             }
-            else if (OperationType == "Substraction") {
-                answer = differenceOfNumbers(values)
-            }
-            else if (OperationType == "Multiplication") {
-                answer = productOfNumbers(values)
-            }
-            else if (OperationType == "Division") {
-                answer = divisionOfNumbers(values)
-            }
-            // console.log("ANSWER ==> ", answer)
-            return answer
-            // var targetedCell = document.getElementById("value-" + cellelement.id);
+
+            console.log("ANSWER ==> ", answer);
+            return answer;
         }
 
         function userSelectionHandler(cellelement, userId) {
@@ -524,8 +858,9 @@
             var existingOverlayDiv = document.getElementById(cellelement.id + "-" + userId);
             var targetedCell = document.getElementById("value-" + cellelement.id);
             var Target = Number(sessionStorage.getItem('Target'));
+            console.log("target", Target);
             var OperationType = Number(sessionStorage.getItem('OperationType'));
-
+            console.log(OperationType)
             if (existingOverlayDiv) {
                 cellelement.removeChild(existingOverlayDiv);
                 selectedCellId[userId] = selectedCellId[userId].filter(number => number !== Number(cellelement.id))
@@ -624,10 +959,11 @@
 
         document.getElementById("send").addEventListener("click", function () {
             //console.log("Attempting to join room...");
-            socket.emit("joinRoom");
+            var OperationType = sessionStorage.getItem('OperationType');
+            socket.emit("joinRoom", OperationType);
+            document.querySelector(".gameSetupPopup").style.display = 'block';
             document.getElementById("username-container").style.display = "none"; // Hide username input
-            document.getElementById("table-container").style.display = "contents"; // Show the table
-            document.getElementById("table-container").style.visibility = "visible"; // Show the table
+            document.getElementById("gameAction-container").style.visibility = "visible"; // Hide username input
         });
 
         socket.on("enteredRoom", function (data) {
@@ -640,28 +976,31 @@
         });
 
         socket.on("tableInfo", function (data) {
+            console.log(data.roomData);
             sessionStorage.setItem('Target', data.roomData.target);
-            sessionStorage.setItem('OperationType', data.roomData.operation);
+            // sessionStorage.setItem('OperationType', data.roomData.operation);
             document.getElementById("targetValue").textContent = data.roomData.target;
             document.getElementById("operationValue").textContent = data.roomData.operation;
+            // document.getElementById("operationValue").textContent = data.roomData.operation;
             document.getElementById('table-container').appendChild(generateTable(data.roomData.roomData))
         });
 
 
-        socket.on("message_result", function (data) {
-            var UserID = sessionStorage.getItem('UserID');
-            var roomNo = sessionStorage.getItem('Room');
-            if (roomNo == data.roomNo) {
-                var targetedBox = document.getElementById(data.cell_id)
-                // console.log("Message result:", data.cell_id, data.user_id);
-                if (UserID != data.user_id) {
-                    userSelectionHandler(targetedBox, data.user_id)
-                }
-                else {
-                    document.getElementById("pointValue").textContent = data.point;
-                }
-            }
-        });
+        // socket.on("message_result", function (data) {
+        //     console.log("points updates:", data);
+        //     var UserID = sessionStorage.getItem('UserID');
+        //     var roomNo = sessionStorage.getItem('Room');
+        //     if (roomNo == data.roomNo) {
+        //         var targetedBox = document.getElementById(data.cell_id)
+        //         // console.log("Message result:", data.cell_id, data.user_id);
+        //         if (UserID != data.user_id) {
+        //             userSelectionHandler(targetedBox, data.user_id)
+        //         }
+        //         else {
+        //             document.getElementById("pointValue").textContent = data.point;
+        //         }
+        //     }
+        // });
     </script>
 </body>
 
