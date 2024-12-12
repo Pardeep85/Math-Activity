@@ -140,6 +140,16 @@
             text-shadow: 1px 1px 2px black;
         }
 
+        .username {
+            position: absolute;
+            top: 180px;
+            left: 20px;
+            font-size: 2rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 1px 1px 2px black;
+        }
+
         .timer {
             position: absolute;
             top: 20px;
@@ -190,6 +200,14 @@
             background-image: url('./start.png');
             width: 200px;
             height: 100px;
+        }
+
+        .highlight {
+            background-color: yellow;
+            /* Or any color you prefer */
+            font-weight: bold;
+            color: red;
+            /* Optional: change text color to make it more visible */
         }
 
         @media (max-width: 1150px) {
@@ -454,6 +472,7 @@
         <div class="target">Target: <span id="targetValue">0</span></div>
         <div class="operation">Operation: <span id="operationValue"></span></div>
         <div class="point">Points: <span id="pointValue">0</span></div>
+        <div class="username">Username: <span id="usernamevalue"></span></div>
         <div class="timer">
             <div id="timer-txt"></div>
         </div>
@@ -467,42 +486,30 @@
     <audio id="correct-sound" src="correct.mp3"></audio>
     <audio id="wrong-sound" src="wrong.mp3"></audio>
 
-    <script src="socket.io.js"></script>
+    <script src="./socket.io.js"></script>
     <script>
-        var socket = io();
-        //const socket = io();
+        const socket = io();
         var selectedCellId = {};
         var answer = {};
         var user_ID = 0;
         const cursor = document.querySelector('.cursor');
         const resultScreen = document.getElementById('resultScreen');
         const playerName = document.getElementById('playerName');
+        const Name = document.getElementById('usernamevalue');
         const playerScore = document.getElementById('playerScore');
         const usernameInput = document.getElementById('username');
         const operationSelect = document.getElementById('operation');
         const currentOperationText = document.getElementById('operationValue');
         var selectedOperation = "Addition";
         sessionStorage.setItem('OperationType', selectedOperation);
-        console.log("Before:",selectedOperation)
-        // Emit selected operation to backend when changed
-        // operationSelect.addEventListener('change', (event) => {
-        //     const selectedOperation = event.target.value;
-        //     socket.emit('selectOperation', selectedOperation);
-        // });
+        console.log("Before:", selectedOperation)
 
         operationSelect.addEventListener('change', (event) => {
             selectedOperation = event.target.value;
             socket.emit('selectOperation', selectedOperation);
             sessionStorage.setItem('OperationType', selectedOperation); // Save to sessionStorage here
-            console.log("After selected operation:",selectedOperation)
+            console.log("After selected operation:", selectedOperation)
         });
-
-
-        // socket.on('updateOperation', (operation) => {
-        //     currentOperationText.textContent = operation;
-        //     operationSelect.value = operation; // Update dropdown to reflect the current operation
-        //     // document.getElementById("targetValue").textContent = target;
-        // });
 
         // Listen for points update
         socket.on('updatePoints', (data) => {
@@ -537,6 +544,7 @@
         function handleJoinRoom() {
             const userName = usernameInput.value || "Guest";
             sessionStorage.setItem('userName', userName);
+            console.log("name:",userName)
             socket.emit("joinRoom");
             document.querySelector(".gameSetupPopup").style.display = 'block';
             document.getElementById("username-container").style.display = "none";
@@ -564,9 +572,6 @@
             if (Target === answer[user_ID] && answerArr.length > 2) {
                 // Play correct answer sound
                 correctSound.play();
-
-                // socket.emit("get_winner", { selected_cell_Id: selectedCellId[user_ID], currentPoint: answerArr.length });
-
                 socket.emit('get_winner', { selected_cell_Id: selectedCellId[user_ID], currentPoint: answerArr.length, operation: OperationType });
                 console.log(answerArr.length)
                 answer = {};
@@ -588,38 +593,6 @@
             document.querySelector(".gameSetupPopup").style.display = "block";
         }
 
-        // function startTimer() {
-        //     const selectedMinutes = parseInt(document.getElementById('timers').value, 10);
-        //     if (isNaN(selectedMinutes) || selectedMinutes <= 0) return;
-
-        //     let timeInSeconds = selectedMinutes * 60;
-        //     console.log(timeInSeconds)
-        //     const countdownInterval = setInterval(() => {
-        //     if (timeInSeconds == 0) {
-        //         clearInterval(countdownInterval);
-        //         const name = sessionStorage.getItem('userName') || "Guest";
-        //         const score = sessionStorage.getItem('userScore') || 100;
-        //         playerName.textContent = `Player: ${name}`;
-        //         playerScore.textContent = `Score: ${score}`;
-        //         resultScreen.style.display = 'flex';
-        //         return;
-        //     }
-
-        //     const minutes = Math.floor(timeInSeconds / 60);
-        //     const seconds = timeInSeconds % 60;
-        //     console.log("minutes",minutes,"seconds",seconds);
-        //     console.log(timeInSeconds);
-        //     if(timeInSeconds==0){
-        //         document.getElementById('timer-txt').textContent = `${minutes}:${seconds}${seconds}`;
-        //     }else{
-        //         document.getElementById('timer-txt').textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-        //         timeInSeconds--;
-        //     }
-        //     let a = document.getElementById('timer-txt').textContent;
-        //     console.log(a);
-        //     }, 1000);
-        // }
-
         function startTimer() {
             const selectedMinutes = parseInt(document.getElementById('timers').value, 10);
             if (isNaN(selectedMinutes) || selectedMinutes <= 0) return;
@@ -637,7 +610,6 @@
                     console.log(score);
                     playerName.textContent = `Player: ${name}`;
                     playerScore.textContent = `Score: ${score}`;
-                    // resultScreen.style.display = 'flex';
                     resultScreen.style.setProperty('display', 'flex', 'important');
                     return;
                 }
@@ -652,7 +624,6 @@
 
         function createOverlayDiv(cell, UserID) {
             var overlayDiv = document.createElement('div');
-            // var UserID = sessionStorage.getItem('UserID');
             overlayDiv.setAttribute('id', cell.id + "-" + UserID)
             overlayDiv.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;';
             if (UserID == 1) {
@@ -681,20 +652,6 @@
         function productOfNumbers(numbers) {
             return numbers.reduce((product, number) => product * number, 1);
         }
-
-        // function differenceOfNumbers(numbers) {
-        //     if (numbers.length === 0) return 0; // Handle empty array
-        //     if (numbers.length === 1) return numbers[0]; // Handle single element array
-
-        //     numbers.sort((a, b) => b - a); // Sort the array in ascending order
-        //     let difference = numbers[0]; // Start with the first number
-        //     for (let i = 1; i < numbers.length; i++) {
-        //         console.log("BEFORE", i, difference, numbers[i])
-        //         difference = Math.abs(difference - numbers[i]);
-        //         console.log("AFTER", i, difference, numbers[i])
-        //     }
-        //     return difference;
-        // }
 
         function differenceOfNumbers(numbers) {
             if (numbers.length === 0) return 0; // Handle empty array
@@ -744,7 +701,6 @@
                 }
                 array.push(row);
             }
-
             return array;
         }
 
@@ -795,35 +751,6 @@
             }
             return null;  // If the element is not found
         }
-
-        // function getValueofIDs(cells) {
-        //     var OperationType = sessionStorage.getItem('OperationType');
-        //     // console.log(OperationType);
-        //     let values = [];
-        //     let answer = 0;
-        //     console.log(cells)
-        //     cells.map((cell) => {
-        //         var targetedCell = document.getElementById("value-" + cell);
-        //         console.log(targetedCell)
-        //         values.push(Number(targetedCell.textContent));
-        //     })
-        //     console.log("OperationType", OperationType, values)
-        //     if (OperationType == "Addition") {
-        //         answer = sumOfNumbers(values)
-        //     }
-        //     else if (OperationType == "Substraction") {
-        //         answer = differenceOfNumbers(values)
-        //     }
-        //     else if (OperationType == "Multiplication") {
-        //         answer = productOfNumbers(values)
-        //     }
-        //     else if (OperationType == "Division") {
-        //         answer = divisionOfNumbers(values)
-        //     }
-        //     console.log("ANSWER ==> ", answer)
-        //     return answer
-        //     // var targetedCell = document.getElementById("value-" + cellelement.id);
-        // }
 
         function getValueofIDs(cells) {
             var OperationType = sessionStorage.getItem('OperationType');
@@ -890,17 +817,6 @@
                 answer[userId] = getValueofIDs(selectedCellId[userId]);
                 user_ID = userId;
             }
-            // if (selectedCellId[userId] != undefined && selectedCellId[userId].length > 1) {
-            //     let elementsToCheck = selectedCellId[userId];
-            //     let array = createSequentialArray(20, 20);
-            //     let result = areElementsConnected(array, elementsToCheck);
-            //     // console.log("Are the elements connected?", result);
-            //     let wrongSound = document.getElementById("wrong-sound");
-            //     if (!result) {
-            //         wrongSound.play()
-            //     }
-            // }
-            //console.log(targetedCell.textContent, " ---", answer, "---", selectedCellId);
         }
 
         function setcursorColor(UserID) {
@@ -917,11 +833,10 @@
                 cursor.style.backgroundColor = "rgba(255, 255, 0, 0.5)";
             }
         }
-        function generateTable(data) {
-            //console.log("=================================generateTable===========================")
+        function generateTable(data, highlight) {
             const removTableContainer = document.querySelector('.tableContainer');
 
-
+            console.log("Data", data, "Highlight", highlight)
             // Check if the element exists before trying to remove it
             if (removTableContainer) {
                 // Remove the element from the DOM
@@ -932,16 +847,26 @@
             const table = document.createElement('table');
             tableContainer.appendChild(table);
             table.style.width = '100%';
+
+            const highlightNumbers = highlight;
+
             data.forEach(row => {
                 const tr = document.createElement('tr');
                 row.forEach(cell => {
                     const td = document.createElement('td');
                     td.id = cell.id;
+
+
+                    if (cell.value === highlightNumbers) {
+                        // Add a class to the cell if the value is NOT the highlight number
+                        td.classList.add('highlight');
+                    }
+
+
                     td.addEventListener('click', function (event) {
                         var UserID = sessionStorage.getItem('UserID');
                         var roomNo = sessionStorage.getItem('Room');
                         var cellelement = event.target;
-                        //console.log("Cell ID:", cellelement.id + "-" + UserID);
                         userSelectionHandler(cellelement, UserID)
                         socket.emit("message", { cellId: cell.id, userId: UserID, roomNo: roomNo });
                     });
@@ -958,7 +883,6 @@
         }
 
         document.getElementById("send").addEventListener("click", function () {
-            //console.log("Attempting to join room...");
             var OperationType = sessionStorage.getItem('OperationType');
             socket.emit("joinRoom", OperationType);
             document.querySelector(".gameSetupPopup").style.display = 'block';
@@ -967,40 +891,20 @@
         });
 
         socket.on("enteredRoom", function (data) {
-            //console.log("Entered room:", data);
             sessionStorage.setItem('UserID', data.playerId);
             sessionStorage.setItem('Room', data.roomNo);
-            //console.log(data.roomData)
             setcursorColor(data.playerId)
-            // document.getElementById('table-container').appendChild(generateTable(data.roomData.roomData))
         });
 
         socket.on("tableInfo", function (data) {
-            console.log(data.roomData);
+            console.log("Highlight:", data.roomData.highlight, "Data:", data.roomData);
             sessionStorage.setItem('Target', data.roomData.target);
-            // sessionStorage.setItem('OperationType', data.roomData.operation);
+            const name = sessionStorage.getItem('userName') || "Guest";
             document.getElementById("targetValue").textContent = data.roomData.target;
             document.getElementById("operationValue").textContent = data.roomData.operation;
-            // document.getElementById("operationValue").textContent = data.roomData.operation;
-            document.getElementById('table-container').appendChild(generateTable(data.roomData.roomData))
+            document.getElementById("usernamevalue").textContent = name;
+            document.getElementById('table-container').appendChild(generateTable(data.roomData.roomData, data.roomData.highlight))
         });
-
-
-        // socket.on("message_result", function (data) {
-        //     console.log("points updates:", data);
-        //     var UserID = sessionStorage.getItem('UserID');
-        //     var roomNo = sessionStorage.getItem('Room');
-        //     if (roomNo == data.roomNo) {
-        //         var targetedBox = document.getElementById(data.cell_id)
-        //         // console.log("Message result:", data.cell_id, data.user_id);
-        //         if (UserID != data.user_id) {
-        //             userSelectionHandler(targetedBox, data.user_id)
-        //         }
-        //         else {
-        //             document.getElementById("pointValue").textContent = data.point;
-        //         }
-        //     }
-        // });
     </script>
 </body>
 
