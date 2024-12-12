@@ -134,6 +134,12 @@ function findCellValues(roomData, cellIDs) {
   return values;
 }
 
+function getRandomNumberFromArray(numbers) {
+  if (numbers.length === 0) return null; // Handle empty array case
+  const randomIndex = Math.floor(Math.random() * numbers.length);
+  return numbers[randomIndex];
+}
+
 function updateValues(roomData, ids) {
   // Function to generate a random value between 1 and 20
   function getRandomValue() {
@@ -177,6 +183,22 @@ function productOfNumbers(numbers) {
 //   return difference;
 // }
 
+// function differenceOfNumbers(numbers) {
+//   if (numbers.length === 0) return 0; // Handle empty array
+//   if (numbers.length === 1) return numbers[0]; // Handle single element array
+
+//   numbers.sort((a, b) => b - a); // Sort descending (largest to smallest)
+//   let difference = numbers[0]; // Start with the largest number
+
+//   for (let i = 1; i < numbers.length; i++) {
+//     console.log("BEFORE", i, difference, numbers[i]);
+//     difference -= numbers[i]; // Subtract directly
+//     console.log("AFTER", i, difference, numbers[i]);
+//   }
+
+//   return Math.abs(difference);
+// }
+
 function differenceOfNumbers(numbers) {
   if (numbers.length === 0) return 0; // Handle empty array
   if (numbers.length === 1) return numbers[0]; // Handle single element array
@@ -188,10 +210,16 @@ function differenceOfNumbers(numbers) {
     console.log("BEFORE", i, difference, numbers[i]);
     difference -= numbers[i]; // Subtract directly
     console.log("AFTER", i, difference, numbers[i]);
+
+    // Adjust if the difference becomes 0
+    if (difference === 0) {
+      difference += numbers[i]; // Add the current number back
+    }
   }
 
   return Math.abs(difference);
 }
+
 
 function divisionOfNumbers(numbers) {
   if (numbers.length === 0) return 0; // Handle empty array
@@ -210,105 +238,6 @@ function divisionOfNumbers(numbers) {
 
   return Math.trunc(Math.abs(result)); // Return the absolute value to ensure positivity
 }
-
-// io.on('connection', (socket) => {
-//     console.log('A user connected with socket id = ', socket.id);
-//     // Joining a room
-//     socket.on('joinRoom', () => {
-//         if (user == 2) {
-//             roomNo++;
-//             user = 0;
-//         }
-//         let roomName = `Room-${roomNo}`;
-//         roomAvaiableSeats[roomNo] = user++;
-//         userData[socket.id] = { roomNo: roomNo, roomName: roomName, playerId: user, point: 0 }; // Store user-specific data
-//         // console.log(userData)
-
-//         // Initialize array for the room if it doesn't exist
-//         if (!roomDatas[roomNo]) {
-//             let roomData = generateNumberArray(20, 20);
-//             // console.log(roomData)
-//             const array = createSequentialArray(20, 20);
-//             let cellIds = getConnectedElements(array);
-//             // let cellIds = generateUniqueRandomNumbers()
-//             console.log("Answer cellsdddddddd", cellIds);
-//             const result = findCellValues(roomData, cellIds);
-//             let operation = 1;//Math.floor(Math.random() * 4) + 1;
-//             console.log(operation)
-
-//             if (operation == 4) {
-//                 roomDatas[roomNo] = { roomData: roomData, target: divisionOfNumbers(result), operation: "Division" };
-//             }
-//             else if (operation == 3) {
-//                 roomDatas[roomNo] = { roomData: roomData, target: productOfNumbers(result), operation: "Multiplication" };
-//             }
-//             else if (operation == 2) {
-//                 roomDatas[roomNo] = { roomData: roomData, target: differenceOfNumbers(result), operation: "Substraction" };
-//             }
-//             else {
-//                 roomDatas[roomNo] = { roomData: roomData, target: sumOfNumbers(result), operation: "Addition" };
-//             }
-
-//         }
-//         // console.log(`User ${socket.id} joined room: ${roomName}`);
-
-//         // Notify the user has joined the room with their specific roomNo
-//         io.to(socket.id).emit('enteredRoom', { roomNo: userData[socket.id].roomNo, roomName: roomName, playerId: user, point: 0 });
-//         io.emit("tableInfo", { roomData: roomDatas[userData[socket.id].roomNo] })
-//     });
-
-//     socket.on('message', (data) => {
-//         // console.log("meesage reciecved", Date)
-//         io.emit("message_result", { cell_id: data.cellId, user_id: userData[socket.id].playerId, roomNo: userData[socket.id].roomNo, point: userData[socket.id].point })
-//     });
-
-//     // socket.on('send_message', (data) => {
-//     //     io.emit('get_winner', data);
-//     // });
-
-//     socket.on('get_winner', (data) => {
-
-//         // console.log("data.selected_cell_Id", data.selected_cell_Id)
-//         let updatedRoomData = updateValues(roomDatas[userData[socket.id].roomNo].roomData, data.selected_cell_Id)
-//         const array = createSequentialArray(20, 20);
-//         let cellIds = getConnectedElements(array);
-//         userData[socket.id].point = Number(userData[socket.id].point) + Number(data.currentPoint)
-//         console.log("Answer celkjjls", cellIds);
-//         const result = findCellValues(updatedRoomData, cellIds);
-//         let operation = 1;
-
-//         if (operation == 4) {
-//             roomDatas[roomNo] = { roomData: updatedRoomData, target: divisionOfNumbers(result), operation: "Division" };
-//         }
-//         else if (operation == 3) {
-//             roomDatas[roomNo] = { roomData: updatedRoomData, target: productOfNumbers(result), operation: "Multiplication" };
-//         }
-//         else if (operation == 2) {
-//             roomDatas[roomNo] = { roomData: updatedRoomData, target: differenceOfNumbers(result), operation: "Substraction" };
-//         }
-//         else {
-//             roomDatas[roomNo] = { roomData: updatedRoomData, target: sumOfNumbers(result), operation: "Addition" };
-//         }
-//         // roomDatas[roomNo] = { roomData: updatedRoomData, target: sumOfNumbers(result) + maxValue };
-//         setTimeout(() => {
-//             io.emit("tableInfo", { roomData: roomDatas[userData[socket.id].roomNo] })
-//         }, 500)
-//     })
-
-//     // Leaving the room
-//     socket.on('leaveRoom', (roomName) => {
-//         socket.leave(roomName);
-//         // console.log(`User ${socket.id} left room: ${roomName}`);
-
-//         // Notify the room that the user has left
-//         io.to(roomName).emit('message', `User ${socket.id} has left the room.`);
-//     });
-
-//     // socket.on('disconnect', () => {
-//     //     delete userData[socket.id]; // Clean up user data on disconnect
-//     //     console.log(`User ${socket.id} disconnected`);
-//     // });
-// });
 
 io.on("connection", (socket) => {
   console.log("A user connected with socket id =", socket.id);
@@ -333,6 +262,10 @@ io.on("connection", (socket) => {
       const cellIds = getConnectedElements(array);
       const result = findCellValues(roomDatas[roomNo].roomData, cellIds);
       roomDatas[roomNo].target = getTargetBasedOnOperation(operation, result);
+      const highlightnumber = getRandomNumberFromArray(result);
+      roomDatas[roomNo].highlight = highlightnumber;
+      console.log("Result:",result)
+      console.log("highlight:",highlightnumber)
 
       // Notify all users in the room of the updated operation and target
       io.in(`Room-${roomNo}`).emit(
@@ -368,11 +301,14 @@ io.on("connection", (socket) => {
       const array = createSequentialArray(20, 20);
       const cellIds = getConnectedElements(array);
       const result = findCellValues(roomData, cellIds);
-
+      const highlightnumber = getRandomNumberFromArray(result);
+      console.log("Result:",result);
+      console.log("Highlight:",highlightnumber);
       roomDatas[roomNo] = {
         roomData,
         target: sumOfNumbers(result), // Start with Addition by default
         operation: "Addition",
+        highlight:highlightnumber
       };
     }
 
@@ -384,6 +320,7 @@ io.on("connection", (socket) => {
       playerId: user,
       point: 0,
       operation: roomDatas[roomNo].operation,
+      highlight:getRandomNumberFromArray(findCellValues(generateNumberArray(20, 20), getConnectedElements(createSequentialArray(20, 20))))
     });
     console.log(roomDatas[roomNo].operation);
     // Emit the current room data and operation to all users
@@ -419,6 +356,7 @@ io.on("connection", (socket) => {
     const array = createSequentialArray(20, 20);
     const cellIds = getConnectedElements(array);
     const result = findCellValues(updatedRoomData, cellIds);
+          const highlightnumber = getRandomNumberFromArray(result);
 
     // Update the player's points based on the operation outcome
     userData[socket.id].point += Number(data.currentPoint);
@@ -431,7 +369,9 @@ io.on("connection", (socket) => {
     // Update room target and operation
     roomDatas[roomNo].target = getTargetBasedOnOperation(userOperation, result);
     roomDatas[roomNo].operation = userOperation;
+    roomDatas[roomNo].highlight = highlightnumber;
     console.log(`User selected operation: ${userOperation}`);
+    console.log(`User selected operation: ${highlightnumber}`);
     console.log(
       `Target calculation based on ${userOperation}: ${roomDatas[roomNo].target}`
     );
