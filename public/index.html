@@ -203,10 +203,13 @@
         }
 
         .highlight {
-            background-color: yellow;
+            background-image: url("fire.jpg");
+            background-size: cover;
+            background-position: center;
+            opacity: .5;
             /* Or any color you prefer */
-            font-weight: bold;
-            color: red;
+            /* font-weight: bold; */
+            /* color: red; */
             /* Optional: change text color to make it more visible */
         }
 
@@ -500,6 +503,7 @@
         const usernameInput = document.getElementById('username');
         const operationSelect = document.getElementById('operation');
         const currentOperationText = document.getElementById('operationValue');
+        let ishighlight = false;
         var selectedOperation = "Addition";
         sessionStorage.setItem('OperationType', selectedOperation);
         console.log("Before:", selectedOperation)
@@ -544,7 +548,7 @@
         function handleJoinRoom() {
             const userName = usernameInput.value || "Guest";
             sessionStorage.setItem('userName', userName);
-            console.log("name:",userName)
+            console.log("name:", userName)
             socket.emit("joinRoom");
             document.querySelector(".gameSetupPopup").style.display = 'block';
             document.getElementById("username-container").style.display = "none";
@@ -562,6 +566,7 @@
 
             var Target = Number(sessionStorage.getItem('Target'));
             var OperationType = sessionStorage.getItem('OperationType');
+            console.log(ishighlight)
             if (!Target || !answer[user_ID]) {
                 return;
             }
@@ -572,7 +577,7 @@
             if (Target === answer[user_ID] && answerArr.length > 2) {
                 // Play correct answer sound
                 correctSound.play();
-                socket.emit('get_winner', { selected_cell_Id: selectedCellId[user_ID], currentPoint: answerArr.length, operation: OperationType });
+                socket.emit('get_winner', { selected_cell_Id: selectedCellId[user_ID], currentPoint: ishighlight ? answerArr.length * 2 : answerArr.length, operation: OperationType });
                 console.log(answerArr.length)
                 answer = {};
                 selectedCellId = {};
@@ -606,7 +611,7 @@
                     document.getElementById('timer-txt').textContent = '0:00'; // Display 0:00 when timer ends
 
                     const name = sessionStorage.getItem('userName') || "Guest";
-                    const score = sessionStorage.getItem('userScore') || 100;
+                    const score = sessionStorage.getItem('userScore') || 0;
                     console.log(score);
                     playerName.textContent = `Player: ${name}`;
                     playerScore.textContent = `Score: ${score}`;
@@ -756,6 +761,9 @@
             var OperationType = sessionStorage.getItem('OperationType');
             let values = [];
             let answer = 0;
+            // Get the highlighted number from sessionStorage and ensure it's parsed as a number
+            let highlighted = Number(sessionStorage.getItem("Highlight"));
+            console.log("highlighted number", highlighted)
 
             cells.map((cell) => {
                 var targetedCell = document.getElementById("value-" + cell);
@@ -763,7 +771,16 @@
                     values.push(Number(targetedCell.textContent)); // Ensure numbers are extracted correctly
                 }
             });
-
+            // Check if the highlighted number is present in the values array
+            if (values.includes(highlighted)) {
+                ishighlight = true; // Set the flag to true if the highlighted number is present
+                console.log("Highlighted number is present in values.");
+            } else {
+                ishighlight = false; // Set the flag to false if the highlighted number is not present
+                console.log("Highlighted number is not present in values.");
+            }
+            console.log(ishighlight)
+            console.log(values.includes(highlighted))
             console.log("OperationType", OperationType, values);
 
             if (OperationType === "Addition") {
@@ -833,15 +850,73 @@
                 cursor.style.backgroundColor = "rgba(255, 255, 0, 0.5)";
             }
         }
+        // function generateTable(data, highlight) {
+        //     const removTableContainer = document.querySelector('.tableContainer');
+
+        //     console.log("Data", data, "Highlight", highlight)
+
+        //     // Check if the element exists before trying to remove it
+        //     if (removTableContainer) {
+        //         // Remove the element from the DOM
+        //         removTableContainer.remove();
+        //     }
+        //     const tableContainer = document.createElement('div');
+        //     tableContainer.className = "tableContainer";
+        //     const table = document.createElement('table');
+        //     tableContainer.appendChild(table);
+        //     table.style.width = '100%';
+
+        //     const highlightNumbers = highlight;
+        //     let isHighlighted = false; // Global flag to track if a highlight has been applied
+        //     data.forEach(row => {
+        //         const tr = document.createElement('tr');
+
+        //         row.forEach(cell => {
+        //             const td = document.createElement('td');
+        //             td.id = cell.id;
+
+        //             // Remove any existing highlight class before checking the value
+        //             td.classList.remove('highlight');
+
+        //             if (cell.value === highlightNumbers && !isHighlighted) {
+        //                 // Add a class to the cell if the value is NOT the highlight number
+        //                 td.classList.add('highlight');
+        //                 isHighlighted = true; // Set the flag to true to prevent further highlighting
+        //                 setTimeout(() => {
+        //                     td.classList.remove('highlight');
+        //                 }, 30000);
+        //             }
+
+
+        //             td.addEventListener('click', function (event) {
+        //                 var UserID = sessionStorage.getItem('UserID');
+        //                 var roomNo = sessionStorage.getItem('Room');
+        //                 var cellelement = event.target;
+        //                 userSelectionHandler(cellelement, UserID)
+        //                 socket.emit("message", { cellId: cell.id, userId: UserID, roomNo: roomNo });
+        //             });
+        //             var valueText = document.createElement('p');
+        //             valueText.textContent = cell.value;
+        //             valueText.id = "value-" + cell.id;
+        //             valueText.style.pointerEvents = "none";
+        //             td.appendChild(valueText);
+        //             tr.appendChild(td);
+        //         });
+        //         table.appendChild(tr);
+        //     });
+        //     return tableContainer;
+        // }
+
         function generateTable(data, highlight) {
             const removTableContainer = document.querySelector('.tableContainer');
 
-            console.log("Data", data, "Highlight", highlight)
-            // Check if the element exists before trying to remove it
+            console.log("Data", data, "Highlight", highlight);
+
+            // Remove existing table container if it exists
             if (removTableContainer) {
-                // Remove the element from the DOM
                 removTableContainer.remove();
             }
+
             const tableContainer = document.createElement('div');
             tableContainer.className = "tableContainer";
             const table = document.createElement('table');
@@ -849,28 +924,29 @@
             table.style.width = '100%';
 
             const highlightNumbers = highlight;
+            const matchingCells = []; // Store cells that match the highlight value
 
             data.forEach(row => {
                 const tr = document.createElement('tr');
+
                 row.forEach(cell => {
                     const td = document.createElement('td');
                     td.id = cell.id;
 
-
+                    // Check if the cell value matches the highlight number
                     if (cell.value === highlightNumbers) {
-                        // Add a class to the cell if the value is NOT the highlight number
-                        td.classList.add('highlight');
+                        matchingCells.push(td); // Add the cell to the list of potential highlights
                     }
 
-
                     td.addEventListener('click', function (event) {
-                        var UserID = sessionStorage.getItem('UserID');
-                        var roomNo = sessionStorage.getItem('Room');
-                        var cellelement = event.target;
-                        userSelectionHandler(cellelement, UserID)
+                        const UserID = sessionStorage.getItem('UserID');
+                        const roomNo = sessionStorage.getItem('Room');
+                        const cellelement = event.target;
+                        userSelectionHandler(cellelement, UserID);
                         socket.emit("message", { cellId: cell.id, userId: UserID, roomNo: roomNo });
                     });
-                    var valueText = document.createElement('p');
+
+                    const valueText = document.createElement('p');
                     valueText.textContent = cell.value;
                     valueText.id = "value-" + cell.id;
                     valueText.style.pointerEvents = "none";
@@ -879,8 +955,20 @@
                 });
                 table.appendChild(tr);
             });
+
+            // Randomly highlight one matching cell
+            if (matchingCells.length > 0) {
+                const randomIndex = Math.floor(Math.random() * matchingCells.length);
+                const randomCell = matchingCells[randomIndex];
+                randomCell.classList.add('highlight');
+                setTimeout(() => {
+                    randomCell.classList.remove('highlight');
+                }, 30000);
+            }
+
             return tableContainer;
         }
+
 
         document.getElementById("send").addEventListener("click", function () {
             var OperationType = sessionStorage.getItem('OperationType');
@@ -899,6 +987,7 @@
         socket.on("tableInfo", function (data) {
             console.log("Highlight:", data.roomData.highlight, "Data:", data.roomData);
             sessionStorage.setItem('Target', data.roomData.target);
+            sessionStorage.setItem('Highlight', data.roomData.highlight);
             const name = sessionStorage.getItem('userName') || "Guest";
             document.getElementById("targetValue").textContent = data.roomData.target;
             document.getElementById("operationValue").textContent = data.roomData.operation;
