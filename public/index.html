@@ -87,7 +87,7 @@
         }
 
         .highlight {
-            background-color: red;
+            background-color: #add8e6;
         }
 
         p {
@@ -433,6 +433,12 @@
             align-items: center;
             font-size: 2em;
         }
+
+        #resultScreen img {
+            width: 100px;
+            position: absolute;
+            top: 470px;
+        }
     </style>
 </head>
 
@@ -485,107 +491,144 @@
     <div id="resultScreen">
         <p id="playerName">Player: </p>
         <p id="playerScore">Score: </p>
+        <img src="replay.png" alt="" id="replay">
     </div>
     <audio id="correct-sound" src="correct.mp3"></audio>
     <audio id="wrong-sound" src="wrong.mp3"></audio>
 
     <script src="./socket.io.js"></script>
     <script>
-        const socket = io();
-        var selectedCellId = {};
-        var answer = {};
-        var user_ID = 0;
-        const cursor = document.querySelector('.cursor');
-        const resultScreen = document.getElementById('resultScreen');
-        const playerName = document.getElementById('playerName');
-        const Name = document.getElementById('usernamevalue');
-        const playerScore = document.getElementById('playerScore');
-        const usernameInput = document.getElementById('username');
-        const operationSelect = document.getElementById('operation');
-        const currentOperationText = document.getElementById('operationValue');
-        let ishighlight = false;
-        var selectedOperation = "Addition";
-        sessionStorage.setItem('OperationType', selectedOperation);
-        console.log("Before:", selectedOperation)
+      const socket = io();
+var selectedCellId = {};
+var answer = {};
+var user_ID = 0;
+var points;
+const cursor = document.querySelector('.cursor');
+const resultScreen = document.getElementById('resultScreen');
+const playerName = document.getElementById('playerName');
+const Name = document.getElementById('usernamevalue');
+const playerScore = document.getElementById('playerScore');
+const usernameInput = document.getElementById('username');
+const operationSelect = document.getElementById('operation');
+const currentOperationText = document.getElementById('operationValue');
+const replay = document.getElementById('replay');
+let ishighlight = false;
+var selectedOperation = "Addition";
+sessionStorage.setItem('OperationType', selectedOperation);
 
-        operationSelect.addEventListener('change', (event) => {
-            selectedOperation = event.target.value;
-            socket.emit('selectOperation', selectedOperation);
-            sessionStorage.setItem('OperationType', selectedOperation); // Save to sessionStorage here
-            console.log("After selected operation:", selectedOperation)
-        });
+// When the operation is selected by the user, update the operation on the server and in sessionStorage
+operationSelect.addEventListener('change', (event) => {
+    selectedOperation = event.target.value;
+    socket.emit('selectOperation', selectedOperation);
+    sessionStorage.setItem('OperationType', selectedOperation); // Save to sessionStorage here
+});
 
-        // Listen for points update
-        socket.on('updatePoints', (data) => {
-            console.log('Updated points:', data.points); // Debugging: Verify points
-            // Find the user's score element by playerId and update it
-            const playerElement = document.getElementById("pointValue")
-            sessionStorage.setItem('userScore', data.points)
-            if (playerElement) {
-                playerElement.textContent = data.points;
-            }
-        });
+// Listen for points update from the server and update the UI
+socket.on('updatePoints', (data) => {
+    const playerElement = document.getElementById("pointValue");
+    sessionStorage.setItem('userScore', data.points);
+    if (playerElement) {
+        playerElement.textContent = data.points;
+    }
+});
 
-        socket.on('updateOperation', (operation) => {
-            currentOperationText.textContent = operation;
-            operationSelect.value = operation;
-            sessionStorage.setItem('OperationType', operation); // Update sessionStorage on backend update as well
-        });
+// Update operation text when the server sends a new operation
+socket.on('updateOperation', (operation) => {
+    currentOperationText.textContent = operation;
+    operationSelect.value = operation;
+    sessionStorage.setItem('OperationType', operation); // Update sessionStorage on backend update
+});
 
+// Cursor movement event
+document.addEventListener('mousemove', e => {
+    cursor.setAttribute("style", "top: " + (e.pageY - 10) + "px; left: " + (e.pageX - 10) + "px;")
+    var UserID = sessionStorage.getItem('UserID');
+    setcursorColor(UserID)
+});
 
-        document.addEventListener('mousemove', e => {
-            cursor.setAttribute("style", "top: " + (e.pageY - 10) + "px; left: " + (e.pageX - 10) + "px;")
-            var UserID = sessionStorage.getItem('UserID');
-            setcursorColor(UserID)
-        })
+const USER_IDS = { PLAYER1: 1, PLAYER2: 2, PLAYER3: 3, DEFAULT: 4 };
 
+document.getElementById("send").addEventListener("click", handleJoinRoom);
+document.querySelector('.button-action').addEventListener('click', gameStart);
 
-        const USER_IDS = { PLAYER1: 1, PLAYER2: 2, PLAYER3: 3, DEFAULT: 4 };
+replay.addEventListener("click", () => {
+    document.getElementById("table-container").style.visibility = "hidden";
+    resultScreen.style.setProperty('display', 'none', 'important');
+    answer = {};
+    selectedCellId = {};
 
-        document.getElementById("send").addEventListener("click", handleJoinRoom);
-        document.querySelector('.button-action').addEventListener('click', gameStart);
+    handleJoinRoom();
+    sessionStorage.removeItem('Target');
+    sessionStorage.removeItem('Highlight');
+    sessionStorage.removeItem('userScore');
 
-        function handleJoinRoom() {
-            const userName = usernameInput.value || "Guest";
-            sessionStorage.setItem('userName', userName);
-            console.log("name:", userName)
-            socket.emit("joinRoom");
-            document.querySelector(".gameSetupPopup").style.display = 'block';
-            document.getElementById("username-container").style.display = "none";
-            document.getElementById("gameAction-container").style.visibility = "visible";
-        }
+    // Clear previous table data
+    const tableContainer = document.querySelector('.tableContainer');
+    if (tableContainer) {
+        tableContainer.remove();
+    }
 
+    // Reset displayed values
+    document.getElementById('targetValue').textContent = '';
+    document.getElementById('operationValue').textContent = '';
+    document.getElementById('pointValue').textContent = '0';
+});
 
-        function setOperationType() {
-            var operationType = document.getElementById('operation').value;
-            console.log(operationType)
-            sessionStorage.setItem('OperationType', operationType);
-        }
+function handleJoinRoom() {
+    const userName = usernameInput.value || "Guest";
+    sessionStorage.setItem('userName', userName);
+    socket.emit("joinRoom");
+    document.querySelector(".gameSetupPopup").style.display = 'block';
+    document.getElementById("username-container").style.display = "none";
+    document.getElementById("gameAction-container").style.visibility = "visible";
+}
 
-        function checkResult() {
+function setOperationType() {
+    var operationType = document.getElementById('operation').value;
+    sessionStorage.setItem('OperationType', operationType);
+}
 
-            var Target = Number(sessionStorage.getItem('Target'));
-            var OperationType = sessionStorage.getItem('OperationType');
-            console.log(ishighlight)
-            if (!Target || !answer[user_ID]) {
-                return;
-            }
-            let answerArr = selectedCellId[user_ID];
-            let correctSound = document.getElementById("correct-sound");
-            let wrongSound = document.getElementById("wrong-sound");
+function checkResult() {
+    var Target = Number(sessionStorage.getItem('Target'));
+    var OperationType = sessionStorage.getItem('OperationType');
+    if (!Target || !answer[user_ID]) {
+        return;
+    }
 
-            if (Target === answer[user_ID] && answerArr.length > 2) {
-                // Play correct answer sound
-                correctSound.play();
-                socket.emit('get_winner', { selected_cell_Id: selectedCellId[user_ID], currentPoint: ishighlight ? answerArr.length * 2 : answerArr.length, operation: OperationType });
-                console.log(answerArr.length)
-                answer = {};
-                selectedCellId = {};
-            } else {
-                // Play wrong answer sound
-                wrongSound.play();
-            }
-        }
+    let answerArr = selectedCellId[user_ID];
+    let correctSound = document.getElementById("correct-sound");
+    let wrongSound = document.getElementById("wrong-sound");
+
+    // Calculate points based on answerArr.length
+    points = calculatePoints(answerArr.length);
+
+    if (Target === answer[user_ID] && answerArr.length > 2) {
+        correctSound.play();
+        socket.emit('get_winner', { selected_cell_Id: selectedCellId[user_ID], currentPoint: points, operation: OperationType });
+        answer = {};
+        selectedCellId = {};
+    } else {
+        wrongSound.play();
+    }
+}
+
+// Function to calculate points based on the length of the answer array
+function calculatePoints(arrayLength) {
+    const pointsLookup = {
+        3: 10,
+        4: 25,
+        5: 55,
+        6: 100,
+        7: 175,
+        8: 295,
+        9: 490,
+        10: 805,
+        11: 1315,
+        12: 2140
+    };
+
+    return pointsLookup[arrayLength] || 0; // Return 0 if length is not in the lookup table
+}
 
         function gameStart() {
             displayGameElements();
@@ -603,7 +646,8 @@
             if (isNaN(selectedMinutes) || selectedMinutes <= 0) return;
 
             let timeInSeconds = selectedMinutes * 60;
-            console.log(timeInSeconds);
+            // let timeInSeconds = 1 * 60;
+            // console.log(timeInSeconds);
 
             const countdownInterval = setInterval(() => {
                 if (timeInSeconds === 0) {
@@ -612,7 +656,7 @@
 
                     const name = sessionStorage.getItem('userName') || "Guest";
                     const score = sessionStorage.getItem('userScore') || 0;
-                    console.log(score);
+                    // console.log(score);
                     playerName.textContent = `Player: ${name}`;
                     playerScore.textContent = `Score: ${score}`;
                     resultScreen.style.setProperty('display', 'flex', 'important');
@@ -666,9 +710,9 @@
             let difference = numbers[0]; // Start with the largest number
 
             for (let i = 1; i < numbers.length; i++) {
-                console.log("BEFORE", i, difference, numbers[i]);
+                // console.log("BEFORE", i, difference, numbers[i]);
                 difference -= numbers[i]; // Subtract each subsequent number
-                console.log("AFTER", i, difference, numbers[i]);
+                // console.log("AFTER", i, difference, numbers[i]);
             }
 
             return Math.abs(difference);
@@ -763,7 +807,11 @@
             let answer = 0;
             // Get the highlighted number from sessionStorage and ensure it's parsed as a number
             let highlighted = Number(sessionStorage.getItem("Highlight"));
-            console.log("highlighted number", highlighted)
+            // console.log("highlighted number", highlighted)
+
+            if(values.length > 0){
+                value = []
+            }
 
             cells.map((cell) => {
                 var targetedCell = document.getElementById("value-" + cell);
@@ -774,14 +822,14 @@
             // Check if the highlighted number is present in the values array
             if (values.includes(highlighted)) {
                 ishighlight = true; // Set the flag to true if the highlighted number is present
-                console.log("Highlighted number is present in values.");
+                // console.log("Highlighted number is present in values.");
             } else {
                 ishighlight = false; // Set the flag to false if the highlighted number is not present
-                console.log("Highlighted number is not present in values.");
+                // console.log("Highlighted number is not present in values.");
             }
-            console.log(ishighlight)
-            console.log(values.includes(highlighted))
-            console.log("OperationType", OperationType, values);
+            // console.log(ishighlight)
+            // console.log(values.includes(highlighted))
+            // console.log("OperationType", OperationType, values);
 
             if (OperationType === "Addition") {
                 answer = sumOfNumbers(values);
@@ -793,18 +841,21 @@
                 answer = divisionOfNumbers(values);
             }
 
-            console.log("ANSWER ==> ", answer);
+            // console.log("ANSWER ==> ", answer);
             return answer;
         }
 
         function userSelectionHandler(cellelement, userId) {
             // console.log("------------------------------userSelectionHandler------------------------------------")
             var existingOverlayDiv = document.getElementById(cellelement.id + "-" + userId);
+            // console.log(existingOverlayDiv)
             var targetedCell = document.getElementById("value-" + cellelement.id);
+            // console.log("targeted cell",targetedCell)
+            // console.log("elementtocheck:",selectedCellId[userId])
             var Target = Number(sessionStorage.getItem('Target'));
-            console.log("target", Target);
+            // console.log("target", Target);
             var OperationType = Number(sessionStorage.getItem('OperationType'));
-            console.log(OperationType)
+            // console.log(OperationType)
             if (existingOverlayDiv) {
                 cellelement.removeChild(existingOverlayDiv);
                 selectedCellId[userId] = selectedCellId[userId].filter(number => number !== Number(cellelement.id))
@@ -821,6 +872,7 @@
                     if (!result && elementsToCheck.length > 0) {
                         let wrongSound = document.getElementById("wrong-sound");
                         wrongSound.play()
+                        // console.log("Result:",result)
                         return;
                     }
                 }
@@ -850,67 +902,11 @@
                 cursor.style.backgroundColor = "rgba(255, 255, 0, 0.5)";
             }
         }
-        // function generateTable(data, highlight) {
-        //     const removTableContainer = document.querySelector('.tableContainer');
-
-        //     console.log("Data", data, "Highlight", highlight)
-
-        //     // Check if the element exists before trying to remove it
-        //     if (removTableContainer) {
-        //         // Remove the element from the DOM
-        //         removTableContainer.remove();
-        //     }
-        //     const tableContainer = document.createElement('div');
-        //     tableContainer.className = "tableContainer";
-        //     const table = document.createElement('table');
-        //     tableContainer.appendChild(table);
-        //     table.style.width = '100%';
-
-        //     const highlightNumbers = highlight;
-        //     let isHighlighted = false; // Global flag to track if a highlight has been applied
-        //     data.forEach(row => {
-        //         const tr = document.createElement('tr');
-
-        //         row.forEach(cell => {
-        //             const td = document.createElement('td');
-        //             td.id = cell.id;
-
-        //             // Remove any existing highlight class before checking the value
-        //             td.classList.remove('highlight');
-
-        //             if (cell.value === highlightNumbers && !isHighlighted) {
-        //                 // Add a class to the cell if the value is NOT the highlight number
-        //                 td.classList.add('highlight');
-        //                 isHighlighted = true; // Set the flag to true to prevent further highlighting
-        //                 setTimeout(() => {
-        //                     td.classList.remove('highlight');
-        //                 }, 30000);
-        //             }
-
-
-        //             td.addEventListener('click', function (event) {
-        //                 var UserID = sessionStorage.getItem('UserID');
-        //                 var roomNo = sessionStorage.getItem('Room');
-        //                 var cellelement = event.target;
-        //                 userSelectionHandler(cellelement, UserID)
-        //                 socket.emit("message", { cellId: cell.id, userId: UserID, roomNo: roomNo });
-        //             });
-        //             var valueText = document.createElement('p');
-        //             valueText.textContent = cell.value;
-        //             valueText.id = "value-" + cell.id;
-        //             valueText.style.pointerEvents = "none";
-        //             td.appendChild(valueText);
-        //             tr.appendChild(td);
-        //         });
-        //         table.appendChild(tr);
-        //     });
-        //     return tableContainer;
-        // }
 
         function generateTable(data, highlight) {
             const removTableContainer = document.querySelector('.tableContainer');
 
-            console.log("Data", data, "Highlight", highlight);
+            // console.log("Data", data, "Highlight", highlight);
 
             // Remove existing table container if it exists
             if (removTableContainer) {
@@ -985,7 +981,7 @@
         });
 
         socket.on("tableInfo", function (data) {
-            console.log("Highlight:", data.roomData.highlight, "Data:", data.roomData);
+            // console.log("Highlight:", data.roomData.highlight, "Data:", data.roomData);
             sessionStorage.setItem('Target', data.roomData.target);
             sessionStorage.setItem('Highlight', data.roomData.highlight);
             const name = sessionStorage.getItem('userName') || "Guest";
