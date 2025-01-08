@@ -220,7 +220,6 @@ function differenceOfNumbers(numbers) {
   return Math.abs(difference);
 }
 
-
 function divisionOfNumbers(numbers) {
   if (numbers.length === 0) return 0; // Handle empty array
   if (numbers.length === 1) return numbers[0]; // Handle single element array
@@ -264,8 +263,8 @@ io.on("connection", (socket) => {
       roomDatas[roomNo].target = getTargetBasedOnOperation(operation, result);
       const highlightnumber = getRandomNumberFromArray(result);
       roomDatas[roomNo].highlight = highlightnumber;
-      console.log("Result:",result)
-      console.log("highlight:",highlightnumber)
+      console.log("Result:", result);
+      console.log("highlight:", highlightnumber);
 
       // Notify all users in the room of the updated operation and target
       io.in(`Room-${roomNo}`).emit(
@@ -302,13 +301,13 @@ io.on("connection", (socket) => {
       const cellIds = getConnectedElements(array);
       const result = findCellValues(roomData, cellIds);
       const highlightnumber = getRandomNumberFromArray(result);
-      console.log("Result:",result);
-      console.log("Highlight:",highlightnumber);
+      console.log("Result:", result);
+      console.log("Highlight:", highlightnumber);
       roomDatas[roomNo] = {
         roomData,
         target: sumOfNumbers(result), // Start with Addition by default
         operation: "Addition",
-        highlight:highlightnumber
+        highlight: highlightnumber,
       };
     }
 
@@ -320,7 +319,12 @@ io.on("connection", (socket) => {
       playerId: user,
       point: 0,
       operation: roomDatas[roomNo].operation,
-      highlight:getRandomNumberFromArray(findCellValues(generateNumberArray(20, 20), getConnectedElements(createSequentialArray(20, 20))))
+      highlight: getRandomNumberFromArray(
+        findCellValues(
+          generateNumberArray(20, 20),
+          getConnectedElements(createSequentialArray(20, 20))
+        )
+      ),
     });
     console.log(roomDatas[roomNo].operation);
     // Emit the current room data and operation to all users
@@ -341,6 +345,13 @@ io.on("connection", (socket) => {
   //     io.emit("get_winner", data);
   //   });
 
+  // //resetgame
+  // socket.on("resetGame", ({ roomNo }) => {
+  //   // Fetch or generate new game data
+  //   const newGameData = generateNewGameData(roomNo); // Assume this function creates new data
+  //   io.to(roomNo).emit("newGameSetup", newGameData);
+  // });
+
   // Handle winner logic with user-selected operation
   socket.on("get_winner", (data) => {
     const roomNo = userData[socket.id].roomNo;
@@ -351,20 +362,27 @@ io.on("connection", (socket) => {
     // Update room data and target based on the operation
     let updatedRoomData = updateValues(
       roomDatas[roomNo].roomData,
-      data.selected_cell_Id
+      data.selected_cell_Id,
+      console.log("hello " + data.selected_cell_Id + roomDatas[roomNo].roomData)
     );
     const array = createSequentialArray(20, 20);
     const cellIds = getConnectedElements(array);
     const result = findCellValues(updatedRoomData, cellIds);
-          const highlightnumber = getRandomNumberFromArray(result);
+    const highlightnumber = getRandomNumberFromArray(result);
 
     // Update the player's points based on the operation outcome
     userData[socket.id].point += Number(data.currentPoint);
 
+    console.log("hello " + userData[socket.id].point)
+    console.log("hello2 " + Number(data.currentPoint))
+
     // Emit the updated points to the frontend for the specific user
     io.to(socket.id).emit("updatePoints", {
       points: userData[socket.id].point,
+      
     });
+
+    console.log("hello3 " + Number(userData[socket.id].point))
 
     // Update room target and operation
     roomDatas[roomNo].target = getTargetBasedOnOperation(userOperation, result);
@@ -385,8 +403,12 @@ io.on("connection", (socket) => {
     io.in(`Room-${roomNo}`).emit("tableInfo", {
       roomData: roomDatas[roomNo],
     });
+    console.log("hello4 " + userData);
+    
   });
 });
+
+
 
 // Helper function to determine the target based on the operation
 function getTargetBasedOnOperation(operation, result) {
